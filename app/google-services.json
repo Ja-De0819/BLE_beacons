@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "899339478082",
+    "project_id": "login-register-ce281",
+    "storage_bucket": "login-register-ce281.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:899339478082:android:0abc794fd735181821f9db",
+        "android_client_info": {
+          "package_name": "com.example.blebeacons"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVYGJOfXknDNV07ZQIGfdxl_Nus4Cs0BM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
