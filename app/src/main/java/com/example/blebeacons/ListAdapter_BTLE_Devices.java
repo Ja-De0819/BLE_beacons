@@ -41,7 +41,9 @@ public class ListAdapter_BTLE_Devices extends ArrayAdapter<BTLE_Device> {
         String address = device.getAddress();
         int rssi = device.getRSSI();
 
-        TextView tv_name = (TextView) convertView.findViewById(R.id.tv_name);
+        TextView tv_name = null;
+
+        tv_name = (TextView) convertView.findViewById(R.id.tv_name);
         if (name != null && name.length() > 0) {
             tv_name.setText(device.getName());
         }

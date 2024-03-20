@@ -23,6 +23,20 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+        <activity
+            android:name=".Activity_BTLE_Services"
+            android:exported="true">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />>
+        </activity>
+
+        <service
+            android:name=".Service_BTLE_GATT"
+            android:enabled="true"
+            android:exported="true"></service>
+
         <activity
             android:name=".Register"
             android:exported="true">

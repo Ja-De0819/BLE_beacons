@@ -3,6 +3,7 @@ package com.example.blebeacons;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -31,10 +32,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final static String TAG = MainActivity.class.getSimpleName();
 
     public static final int REQUEST_ENABLE_BT = 1;
+    public static final int BTLE_SERVICES = 2;
 
     private HashMap<String, BTLE_Device> mBTDevicesHashMap;
     private ArrayList<BTLE_Device> mBTDevicesArrayList;
     private ListAdapter_BTLE_Devices adapter;
+    private ListView listView;
 
     private FirebaseAuth mAuth;
     private TextView greetingTextView;
@@ -176,11 +179,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (requestCode == REQUEST_ENABLE_BT) {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
-                 //Utils.toast(getApplicationContext(), "Thank you for turning on Bluetooth");
+               Utils.toast(getApplicationContext(), "Thank you for turning on Bluetooth");
             }
             else if (resultCode == RESULT_CANCELED) {
                 Utils.toast(getApplicationContext(), "Please turn on Bluetooth");
             }
+        }
+        else if (requestCode == BTLE_SERVICES) {
+            // Do something
         }
     }
 
@@ -189,13 +195,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        // Used in future BLE tutorials
+        Context context = view.getContext();
+
+        Utils.toast(context, "List Item clicked");
+
+        // do something with the text views and start the next activity.
+
+        stopScan();
+
+        String name = mBTDevicesArrayList.get(position).getName();
+        String address = mBTDevicesArrayList.get(position).getAddress();
+
+        Intent intent = new Intent(this, Activity_BTLE_Services.class);
+        intent.putExtra(Activity_BTLE_Services.EXTRA_NAME, name);
+        intent.putExtra(Activity_BTLE_Services.EXTRA_ADDRESS, address);
+        startActivityForResult(intent, BTLE_SERVICES);
+
     }
 
     /**
      * Called when the scan button is clicked.
+     *
      * @param v The view that was clicked
      */
+
     @Override
     public void onClick(View v) {
 
@@ -206,8 +229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 if (!mBTLeScanner.isScanning()) {
                     startScan();
-                }
-                else {
+                } else {
                     stopScan();
                 }
 
@@ -219,8 +241,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * Adds a device to the ArrayList and Hashmap that the ListAdapter is keeping track of.
+     *
      * @param device the BluetoothDevice to be added
-     * @param rssi the rssi of the BluetoothDevice
+     * @param rssi   the rssi of the BluetoothDevice
      */
     public void addDevice(BluetoothDevice device, int rssi) {
 
@@ -231,8 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             mBTDevicesHashMap.put(address, btleDevice);
             mBTDevicesArrayList.add(btleDevice);
-        }
-        else {
+        } else {
             mBTDevicesHashMap.get(address).setRSSI(rssi);
         }
 
@@ -244,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Starts Scanner_BTLE.
      * Changes the scan button text.
      */
-    public void startScan(){
+    public void startScan() {
         btn_Scan.setText("Scanning...");
 
         mBTDevicesArrayList.clear();
@@ -279,4 +301,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             updateGreeting();
         }
     };
+
 }
