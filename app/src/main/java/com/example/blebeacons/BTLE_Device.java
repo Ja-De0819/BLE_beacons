@@ -9,9 +9,18 @@ public class BTLE_Device {
 
     private BluetoothDevice bluetoothDevice;
     private int rssi;
+    private String address;
+    private String name;
 
     public BTLE_Device(BluetoothDevice bluetoothDevice) {
         this.bluetoothDevice = bluetoothDevice;
+    }
+
+    // Constructor to create BTLE_Device object with name, address, and RSSI
+    public BTLE_Device(String name, String address, int rssi) {
+        this.name = name;
+        this.address = address;
+        this.rssi = rssi;
     }
 
     public String getAddress() {
@@ -22,11 +31,17 @@ public class BTLE_Device {
         return bluetoothDevice.getName();
     }
 
+    public int getRSSI() { return rssi;}
+
+    public void setName(String name) { this.name = name; }
+
     public void setRSSI(int rssi) {
         this.rssi = rssi;
     }
 
-    public int getRSSI() {
-        return rssi;
-    }
+    /**
+     * Gets the underlying BluetoothDevice object.
+     * @return The BluetoothDevice object.
+     */
+
 }

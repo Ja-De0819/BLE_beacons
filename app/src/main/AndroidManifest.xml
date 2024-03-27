@@ -17,25 +17,24 @@
         android:theme="@style/Theme.BLEBeacons"
         tools:targetApi="28">
         <activity
+            android:name=".EditDeviceNameActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
 
-        <activity
-            android:name=".Activity_BTLE_Services"
-            android:exported="true">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />>
-        </activity>
-
         <service
             android:name=".Service_BTLE_GATT"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
 
         <activity
             android:name=".Register"

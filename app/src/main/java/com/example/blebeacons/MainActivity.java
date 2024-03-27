@@ -3,7 +3,6 @@ package com.example.blebeacons;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -33,9 +32,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int BTLE_SERVICES = 2;
+    public static final int EDIT_DEVICE_NAME_REQUEST = 2;
+
 
     private HashMap<String, BTLE_Device> mBTDevicesHashMap;
     private ArrayList<BTLE_Device> mBTDevicesArrayList;
+    private ArrayList<BTLE_Device> selectedDevices;
     private ListAdapter_BTLE_Devices adapter;
     private ListView listView;
 
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mBTDevicesHashMap = new HashMap<>();
         mBTDevicesArrayList = new ArrayList<>();
+        selectedDevices = new ArrayList<>();
 
         mAuth = FirebaseAuth.getInstance();
         greetingTextView = findViewById(R.id.textViewGreeting);
@@ -174,33 +177,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == EDIT_DEVICE_NAME_REQUEST && resultCode == RESULT_OK) {
+            String newName = data.getStringExtra("newName");
 
-        // Check which request we're responding to
-        if (requestCode == REQUEST_ENABLE_BT) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-               Utils.toast(getApplicationContext(), "Thank you for turning on Bluetooth");
+            // Ensure that the editedDevice is not null before accessing its properties
+            BTLE_Device editedDevice = data.getParcelableExtra("editedDevice");
+            if (editedDevice != null) {
+                // Update the name of the edited device in the selectedDevices list
+                for (BTLE_Device device : selectedDevices) {
+                    if (device.getAddress().equals(editedDevice.getAddress())) {
+                        // Found the edited device, update its name
+                        device.setName(newName);
+                        // Optionally, update the UI to reflect the new name
+                        adapter.notifyDataSetChanged(); // Assuming you have an adapter for the list view
+                        break; // Exit loop since device is found
+                    }
+                }
+            } else {
+                // Handle the case where editedDevice is null
+                Utils.toast(getApplicationContext(), "Edited device is null");
+                Log.e(TAG, "Edited device is null");
             }
-            else if (resultCode == RESULT_CANCELED) {
-                Utils.toast(getApplicationContext(), "Please turn on Bluetooth");
-            }
-        }
-        else if (requestCode == BTLE_SERVICES) {
-            // Do something
         }
     }
 
     /**
      * Called when an item in the ListView is clicked.
      */
+
     @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        BTLE_Device selectedDevice = mBTDevicesArrayList.get(position);
+        if (selectedDevices != null) {
+            selectedDevices.add(selectedDevice); // Add the selected device to the list
+            stopScan();
+
+            String name = selectedDevice.getName();
+            String address = selectedDevice.getAddress();
+
+            Intent intent = new Intent(this, EditDeviceNameActivity.class);
+            intent.putExtra(EditDeviceNameActivity.EXTRA_DEVICE_NAME, name);
+            intent.putExtra(EditDeviceNameActivity.EXTRA_DEVICE_ADDRESS, address); // Add MAC address as extra
+            startActivityForResult(intent, EDIT_DEVICE_NAME_REQUEST);
+        } else {
+            Utils.toast(getApplicationContext(), "NO BLE Devices");
+        }
+    }
+
+    /*@Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Context context = view.getContext();
 
         Utils.toast(context, "List Item clicked");
 
         // do something with the text views and start the next activity.
-
         stopScan();
 
         String name = mBTDevicesArrayList.get(position).getName();
@@ -211,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         intent.putExtra(Activity_BTLE_Services.EXTRA_ADDRESS, address);
         startActivityForResult(intent, BTLE_SERVICES);
 
-    }
+    }*/
 
     /**
      * Called when the scan button is clicked.
