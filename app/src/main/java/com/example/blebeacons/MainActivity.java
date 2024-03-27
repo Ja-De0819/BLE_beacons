@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -26,6 +27,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -37,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private HashMap<String, BTLE_Device> mBTDevicesHashMap;
     private ArrayList<BTLE_Device> mBTDevicesArrayList;
-    private ArrayList<BTLE_Device> selectedDevices;
+    private List<BTLE_Device> selectedDevices = new ArrayList<>();
     private ListAdapter_BTLE_Devices adapter;
     private ListView listView;
 
@@ -209,40 +211,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         BTLE_Device selectedDevice = mBTDevicesArrayList.get(position);
-        if (selectedDevices != null) {
-            selectedDevices.add(selectedDevice); // Add the selected device to the list
-            stopScan();
-
-            String name = selectedDevice.getName();
-            String address = selectedDevice.getAddress();
-
-            Intent intent = new Intent(this, EditDeviceNameActivity.class);
-            intent.putExtra(EditDeviceNameActivity.EXTRA_DEVICE_NAME, name);
-            intent.putExtra(EditDeviceNameActivity.EXTRA_DEVICE_ADDRESS, address); // Add MAC address as extra
-            startActivityForResult(intent, EDIT_DEVICE_NAME_REQUEST);
+        if (selectedDevice != null) {
+            selectedDevices.add(selectedDevice);
+            Toast.makeText(this, "Added device to the list", Toast.LENGTH_SHORT).show();
         } else {
-            Utils.toast(getApplicationContext(), "NO BLE Devices");
+            Toast.makeText(this, "Selected device is null", Toast.LENGTH_SHORT).show();
         }
     }
-
-    /*@Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Context context = view.getContext();
-
-        Utils.toast(context, "List Item clicked");
-
-        // do something with the text views and start the next activity.
-        stopScan();
-
-        String name = mBTDevicesArrayList.get(position).getName();
-        String address = mBTDevicesArrayList.get(position).getAddress();
-
-        Intent intent = new Intent(this, Activity_BTLE_Services.class);
-        intent.putExtra(Activity_BTLE_Services.EXTRA_NAME, name);
-        intent.putExtra(Activity_BTLE_Services.EXTRA_ADDRESS, address);
-        startActivityForResult(intent, BTLE_SERVICES);
-
-    }*/
 
     /**
      * Called when the scan button is clicked.
@@ -263,7 +238,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     stopScan();
                 }
+                break;
 
+            case R.id.btn_proceed:
+                // Check if any devices are selected
+                if (!selectedDevices.isEmpty()) {
+                    // Navigate to the SelectedDevicesActivity to display selected devices
+                    //goToSelectedDevicesActivity();
+                } else {
+                    Utils.toast(getApplicationContext(), "Please select at least one device.");
+                }
                 break;
             default:
                 break;
@@ -317,6 +301,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mBTLeScanner.stop();
     }
+
+    /*public void goToSelectedDevicesActivity() {
+        ArrayList<BTLE_Device> selectedDevicesArrayList = new ArrayList<>(selectedDevices);
+        Intent intent = new Intent(this, SelectedDevicesActivity.class);
+        intent.putParcelableArrayListExtra("selectedDevices", selectedDevicesArrayList);
+        startActivity(intent);
+    }*/
 
     private void updateGreeting() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
