@@ -17,6 +17,13 @@
         android:theme="@style/Theme.BLEBeacons"
         tools:targetApi="28">
         <activity
+            android:name=".SelectedDevicesActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".EditDeviceNameActivity"
             android:exported="false">
             <meta-data

@@ -1,10 +1,7 @@
 package com.example.blebeacons;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -32,7 +29,7 @@ public class EditDeviceNameActivity extends AppCompatActivity {
             deviceAddressTextView.setText(deviceAddress);
 
 
-            Button btnSave = findViewById(R.id.btn_save);
+            /*Button btnSave = findViewById(R.id.btn_save);
             btnSave.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -43,7 +40,7 @@ public class EditDeviceNameActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 }
-            });
+            });*/
 
         }
     }

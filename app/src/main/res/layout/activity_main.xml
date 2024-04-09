@@ -43,7 +43,15 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Proceed"
+        android:id="@+id/btn_proceed"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Start Scan"
         android:id="@+id/btn_scan"/>
+
+
 
 </LinearLayout>

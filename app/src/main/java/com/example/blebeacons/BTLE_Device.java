@@ -1,11 +1,13 @@
 package com.example.blebeacons;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by Kelvin on 5/8/16.
  */
-public class BTLE_Device {
+public class BTLE_Device implements Parcelable {
 
     private BluetoothDevice bluetoothDevice;
     private int rssi;
@@ -16,11 +18,29 @@ public class BTLE_Device {
         this.bluetoothDevice = bluetoothDevice;
     }
 
-    // Constructor to create BTLE_Device object with name, address, and RSSI
-    public BTLE_Device(String name, String address, int rssi) {
-        this.name = name;
-        this.address = address;
-        this.rssi = rssi;
+    protected BTLE_Device(Parcel in) {
+        bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
+        rssi = in.readInt();
+    }
+
+    public static final Creator<BTLE_Device> CREATOR = new Creator<BTLE_Device>() {
+        @Override
+        public BTLE_Device createFromParcel(Parcel in) {
+            return new BTLE_Device(in);
+        }
+
+        @Override
+        public BTLE_Device[] newArray(int size) {
+            return new BTLE_Device[size];
+        }
+    };
+
+    public BluetoothDevice getBluetoothDevice() {
+        return bluetoothDevice;
+    }
+
+    public void setBluetoothDevice(BluetoothDevice bluetoothDevice) {
+        this.bluetoothDevice = bluetoothDevice;
     }
 
     public String getAddress() {
@@ -37,6 +57,17 @@ public class BTLE_Device {
 
     public void setRSSI(int rssi) {
         this.rssi = rssi;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(bluetoothDevice, flags);
+        dest.writeInt(rssi);
     }
 
     /**

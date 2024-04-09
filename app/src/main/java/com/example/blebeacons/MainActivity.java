@@ -84,9 +84,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btn_Scan = findViewById(R.id.btn_scan);
         btn_Logout = findViewById(R.id.btn_logout);
+        Button btn_proceed = findViewById(R.id.btn_proceed);
 
         ((ScrollView) findViewById(R.id.scrollView)).addView(listView);
         findViewById(R.id.btn_scan).setOnClickListener(this);
+        findViewById(R.id.btn_proceed ).setOnClickListener(this);
         btn_Logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -227,12 +229,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-
         switch (v.getId()) {
-
             case R.id.btn_scan:
                 Utils.toast(getApplicationContext(), "Scan Button Pressed");
-
                 if (!mBTLeScanner.isScanning()) {
                     startScan();
                 } else {
@@ -244,15 +243,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // Check if any devices are selected
                 if (!selectedDevices.isEmpty()) {
                     // Navigate to the SelectedDevicesActivity to display selected devices
-                    //goToSelectedDevicesActivity();
+                    goToSelectedDevicesActivity();
                 } else {
                     Utils.toast(getApplicationContext(), "Please select at least one device.");
                 }
                 break;
+
             default:
                 break;
         }
     }
+
 
     /**
      * Adds a device to the ArrayList and Hashmap that the ListAdapter is keeping track of.
@@ -302,12 +303,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBTLeScanner.stop();
     }
 
-    /*public void goToSelectedDevicesActivity() {
+    public void goToSelectedDevicesActivity() {
         ArrayList<BTLE_Device> selectedDevicesArrayList = new ArrayList<>(selectedDevices);
         Intent intent = new Intent(this, SelectedDevicesActivity.class);
         intent.putParcelableArrayListExtra("selectedDevices", selectedDevicesArrayList);
         startActivity(intent);
-    }*/
+    }
 
     private void updateGreeting() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
