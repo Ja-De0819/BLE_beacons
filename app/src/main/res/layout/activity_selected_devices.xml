@@ -13,8 +13,16 @@
         <ListView
             android:id="@+id/listViewSelectedDevices"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="6dp" />
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/btnStartMonitoring"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Monitoring"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/listViewSelectedDevices" />
+
 
     </RelativeLayout>
 
