@@ -8,23 +8,43 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class MonitoringActivity extends AppCompatActivity {
 
     private TextView textViewBeaconInfo;
     private Map<String, Integer> deviceRSSIMap = new HashMap<>();
-    private List<BTLE_Device> selectedDevices;
+    private DatabaseReference databaseReference;
+    private FirebaseFirestore firestore;
+    private String currentUserId;
     private Handler handler = new Handler();
-    private static final long SCAN_PERIOD = 5000; // 5 seconds
+    private static final long SCAN_PERIOD = 10000; // 5 seconds
     private static final long SCAN_INTERVAL = 20000; // 20 seconds
+
+    private EditText editTextEmail;
+    private EditText editTextPassword;
+    private Button buttonShare;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,15 +52,31 @@ public class MonitoringActivity extends AppCompatActivity {
         setContentView(R.layout.activity_monitoring);
 
         textViewBeaconInfo = findViewById(R.id.textViewBeaconInfo);
+        editTextEmail = findViewById(R.id.editTextEmail);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        buttonShare = findViewById(R.id.buttonShare);
 
-        // Retrieve the list of selected Bluetooth devices from the intent
-        selectedDevices = getIntent().getParcelableArrayListExtra("selectedDevices");
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+        currentUserId = mAuth.getCurrentUser().getUid();
+        databaseReference = FirebaseDatabase.getInstance("https://login-register-ce281-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                .getReference("beacons").child(currentUserId);
 
         // Start BLE scanning
         startBLEScan();
 
         // Schedule the scanning process every SCAN_INTERVAL milliseconds
         handler.postDelayed(scanRunnable, SCAN_INTERVAL);
+
+        // Set click listener for the share button
+        buttonShare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String email = editTextEmail.getText().toString().trim(); // Get the entered email
+                String password = editTextPassword.getText().toString().trim(); // Get the entered password
+                shareData(email,password);
+            }
+        });
     }
 
     private void startBLEScan() {
@@ -80,25 +116,28 @@ public class MonitoringActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // A new BLE device is found
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
-                // Check if the found device is in the selected devices list
-                for (BTLE_Device selectedDevice : selectedDevices) {
-                    if (selectedDevice.getAddress().equals(device.getAddress())) {
-                        // Update RSSI value for the device
-                        deviceRSSIMap.put(device.getAddress(), rssi);
+                firestore.collection("beacons").document(currentUserId).collection("userBeacons")
+                        .document(device.getAddress())
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                if (documentSnapshot.exists()) {
 
-                        // Display beacon with the nearest device
-                        displayNearestBeacon();
-                        break; // Exit loop since the device is found in the selected devices list
-                    }
-                }
-            }
+                            // Update RSSI value for the device
+                            deviceRSSIMap.put(device.getAddress(),rssi);
+
+                            // Display beacon with the nearest device
+                            displayNearestBeacon();
+                        }
+                 }
+            });
         }
-    };
-
+    }
+};
     private Runnable scanRunnable = new Runnable() {
         @Override
         public void run() {
@@ -111,19 +150,75 @@ public class MonitoringActivity extends AppCompatActivity {
 
     private void displayNearestBeacon() {
         int maxRSSI = Integer.MIN_VALUE;
-        String nearestDevice = null;
+        String nearestDeviceAddress = null;
         for (Map.Entry<String, Integer> entry : deviceRSSIMap.entrySet()) {
             if (entry.getValue() > maxRSSI) {
                 maxRSSI = entry.getValue();
-                nearestDevice = entry.getKey();
+                nearestDeviceAddress = entry.getKey();
             }
         }
 
-        if (nearestDevice != null) {
-            // Display beacon information
-            textViewBeaconInfo.setText("Nearest Device Address: " + nearestDevice + "\nRSSI: " + maxRSSI);
+        if (nearestDeviceAddress != null) {
+            firestore.collection("beacons").document(currentUserId).collection("userBeacons")
+                    .document(nearestDeviceAddress).get()
+                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            if (documentSnapshot.exists()) {
+                                String beaconName = documentSnapshot.getString("name");
+                                String beaconAddress = documentSnapshot.getString("address");
+                                int rssi = deviceRSSIMap.getOrDefault(beaconAddress, 0);
+
+                                // Display beacon information
+                                textViewBeaconInfo.setText("Name: " + beaconName + "\nAddress: " + beaconAddress + "\nRSSI: " + rssi);
+
+                                // Save beacon information to Firebase database
+                                Map<String, Object> beaconInfo = new HashMap<>();
+                                beaconInfo.put("name", beaconName);
+                                beaconInfo.put("address", beaconAddress);
+                                beaconInfo.put("rssi", rssi);
+                                databaseReference.setValue(beaconInfo);
+
+                            }
+                            else {
+                                // If no nearest beacon found, clear the displayed information
+                                textViewBeaconInfo.setText("not success");
+                            }
+                        }
+                    });
+        }
+        else {
+            // If no nearest beacon found, clear the displayed information
+            textViewBeaconInfo.setText("");
         }
     }
+
+    private void shareData(String email, String password) {
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, proceed with sharing data
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                String userBUid = user.getUid();
+                                Toast.makeText(MonitoringActivity.this, userBUid,
+                                        Toast.LENGTH_SHORT).show();
+                                // Share data with User B using their UID or other identifier
+                                // You can implement your data sharing logic here
+
+                            }
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Toast.makeText(MonitoringActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
 
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();

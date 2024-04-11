@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BLEBeacons"
         tools:targetApi="28">
+
         <activity
             android:name=".MonitoringActivity"
             android:exported="false">

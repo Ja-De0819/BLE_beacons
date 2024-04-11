@@ -22,8 +22,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ListView listView;
 
     private FirebaseAuth mAuth;
+    private String currentUserId;
     private TextView greetingTextView;
 
     private Button btn_Scan;
@@ -214,12 +219,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         BTLE_Device selectedDevice = mBTDevicesArrayList.get(position);
         if (selectedDevice != null) {
+            // Save the selected device to Firestore
+            saveSelectedDeviceToFirestore(selectedDevice);
+            // Add the selected device to the list of selected devices
             selectedDevices.add(selectedDevice);
+            // Notify the user
             Toast.makeText(this, "Added device to the list", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Selected device is null", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     /**
      * Called when the scan button is clicked.
@@ -276,6 +286,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         adapter.notifyDataSetChanged();
     }
+
+    private void saveSelectedDeviceToFirestore(BTLE_Device selectedDevice) {
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        currentUserId = mAuth.getCurrentUser().getUid();
+
+        // Assume you have a collection named "selectedDevices" in Firestore
+        CollectionReference beaconsRef = db.collection("beacons").document(currentUserId).collection("userBeacons");
+        // Create a document for the selected device
+        HashMap<String, Object> deviceData = new HashMap<>();
+        deviceData.put("address", selectedDevice.getAddress());
+        deviceData.put("name", selectedDevice.getName());
+        deviceData.put("rssi", selectedDevice.getRSSI());
+        deviceData.put("userId", currentUserId); // Include the user's ID in the beacon data
+        // Add other fields as needed
+
+        beaconsRef.document(selectedDevice.getAddress()).set(deviceData)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Selected device added to Firestore");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding selected device to Firestore", e);
+                    }
+                });
+    }
+
+
 
     /**
      * Clears the ArrayList and Hashmap the ListAdapter is keeping track of.
