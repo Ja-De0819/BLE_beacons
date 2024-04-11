@@ -36,10 +36,12 @@ public class MonitoringActivity extends AppCompatActivity {
     private TextView textViewBeaconInfo;
     private Map<String, Integer> deviceRSSIMap = new HashMap<>();
     private DatabaseReference databaseReference;
+    private DatabaseReference databaseReferenceForUserB;
     private FirebaseFirestore firestore;
     private String currentUserId;
+    private String userBUid;
     private Handler handler = new Handler();
-    private static final long SCAN_PERIOD = 10000; // 5 seconds
+    private static final long SCAN_PERIOD = 5000; // 5 seconds
     private static final long SCAN_INTERVAL = 20000; // 20 seconds
 
     private EditText editTextEmail;
@@ -61,6 +63,7 @@ public class MonitoringActivity extends AppCompatActivity {
         currentUserId = mAuth.getCurrentUser().getUid();
         databaseReference = FirebaseDatabase.getInstance("https://login-register-ce281-default-rtdb.asia-southeast1.firebasedatabase.app/")
                 .getReference("beacons").child(currentUserId);
+
 
         // Start BLE scanning
         startBLEScan();
@@ -132,6 +135,10 @@ public class MonitoringActivity extends AppCompatActivity {
 
                             // Display beacon with the nearest device
                             displayNearestBeacon();
+                            // Check if userBUid is not null before calling displayNearestBeaconForB
+                            if (userBUid != null) {
+                                displayNearestBeaconForB(userBUid);
+                            }
                         }
                  }
             });
@@ -203,11 +210,12 @@ public class MonitoringActivity extends AppCompatActivity {
                             // Sign in success, proceed with sharing data
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
-                                String userBUid = user.getUid();
+                                userBUid = user.getUid();
                                 Toast.makeText(MonitoringActivity.this, userBUid,
                                         Toast.LENGTH_SHORT).show();
                                 // Share data with User B using their UID or other identifier
-                                // You can implement your data sharing logic here
+                                // You can implement your data sharing logic here\
+                                displayNearestBeaconForB(userBUid);
 
                             }
                         } else {
@@ -218,6 +226,47 @@ public class MonitoringActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    private void displayNearestBeaconForB(String userBUid) {
+        int maxRSSI = Integer.MIN_VALUE;
+        String nearestDeviceAddress = null;
+        for (Map.Entry<String, Integer> entry : deviceRSSIMap.entrySet()) {
+            if (entry.getValue() > maxRSSI) {
+                maxRSSI = entry.getValue();
+                nearestDeviceAddress = entry.getKey();
+            }
+        }
+
+        if (nearestDeviceAddress != null) {
+            firestore.collection("beacons").document(currentUserId).collection("userBeacons")
+                    .document(nearestDeviceAddress).get()
+                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            if (documentSnapshot.exists()) {
+                                String beaconName = documentSnapshot.getString("name");
+                                String beaconAddress = documentSnapshot.getString("address");
+                                int rssi = deviceRSSIMap.getOrDefault(beaconAddress, 0);
+                                databaseReferenceForUserB = FirebaseDatabase.getInstance("https://login-register-ce281-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                                        .getReference("Monitor").child(userBUid);
+
+                                // Save beacon information to Firebase database
+                                Map<String, Object> beaconInfo = new HashMap<>();
+                                beaconInfo.put("name", beaconName);
+                                beaconInfo.put("address", beaconAddress);
+                                beaconInfo.put("rssi", rssi);
+                                databaseReferenceForUserB.setValue(beaconInfo);
+
+                            }
+                            else {
+                                // If no nearest beacon found, clear the displayed information
+                                textViewBeaconInfo.setText("not success");
+                            }
+                        }
+                    });
+        }
+    }
+
 
 
     private void showToast(String message) {
