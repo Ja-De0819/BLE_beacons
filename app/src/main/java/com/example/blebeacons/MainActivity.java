@@ -28,6 +28,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -254,14 +255,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (!selectedDevices.isEmpty()) {
                     // Navigate to the SelectedDevicesActivity to display selected devices
                     goToSelectedDevicesActivity();
-                } else {
-                    Utils.toast(getApplicationContext(), "Please select at least one device.");
+                }
+                else {
+                    checkFirestoreCollection();
                 }
                 break;
 
             default:
                 break;
         }
+    }
+    private void checkFirestoreCollection() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        currentUserId = mAuth.getCurrentUser().getUid();
+
+        // Assume you have a collection named "userBeacons" in Firestore
+        CollectionReference beaconsRef = db.collection("beacons").document(currentUserId).collection("userBeacons");
+
+        beaconsRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                if (queryDocumentSnapshots.isEmpty()) {
+                    // Firestore collection is empty
+                    Utils.toast(getApplicationContext(), "Please select at least one device.");
+                } else {
+                    // Firestore collection is not empty, navigate to SelectedDevicesActivity
+                    goToSelectedDevicesActivity();
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "Error checking Firestore collection", e);
+                Utils.toast(getApplicationContext(), "Error checking Firestore collection");
+            }
+        });
     }
 
 
