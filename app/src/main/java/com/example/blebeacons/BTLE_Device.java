@@ -35,14 +35,6 @@ public class BTLE_Device implements Parcelable {
         }
     };
 
-    public BluetoothDevice getBluetoothDevice() {
-        return bluetoothDevice;
-    }
-
-    public void setBluetoothDevice(BluetoothDevice bluetoothDevice) {
-        this.bluetoothDevice = bluetoothDevice;
-    }
-
     public String getAddress() {
         return bluetoothDevice.getAddress();
     }

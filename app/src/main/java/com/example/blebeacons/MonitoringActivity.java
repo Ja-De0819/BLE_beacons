@@ -175,15 +175,21 @@ public class MonitoringActivity extends AppCompatActivity {
                                 String beaconName = documentSnapshot.getString("name");
                                 String beaconAddress = documentSnapshot.getString("address");
                                 int rssi = deviceRSSIMap.getOrDefault(beaconAddress, 0);
+                                double distance = Math.pow(10, ((-64 - rssi) / 32.0)); // Calculate distance using the formula
+                                String formattedDistance = String.format("%.3f", distance); // Round to three significant digits
 
                                 // Display beacon information
-                                textViewBeaconInfo.setText("Name: " + beaconName + "\nAddress: " + beaconAddress + "\nRSSI: " + rssi);
+                                textViewBeaconInfo.setText("Name: " + beaconName +
+                                        "\nAddress: " + beaconAddress +
+                                        "\nRSSI: " + rssi+
+                                        "\nDistance: " + formattedDistance+ " cm");
 
                                 // Save beacon information to Firebase database
                                 Map<String, Object> beaconInfo = new HashMap<>();
                                 beaconInfo.put("name", beaconName);
                                 beaconInfo.put("address", beaconAddress);
                                 beaconInfo.put("rssi", rssi);
+                                beaconInfo.put("distance", formattedDistance+ " cm");
                                 databaseReference.setValue(beaconInfo);
 
                             }
@@ -247,6 +253,8 @@ public class MonitoringActivity extends AppCompatActivity {
                                 String beaconName = documentSnapshot.getString("name");
                                 String beaconAddress = documentSnapshot.getString("address");
                                 int rssi = deviceRSSIMap.getOrDefault(beaconAddress, 0);
+                                double distance = Math.pow(10, ((-64 - rssi) / 32.0)); // Calculate distance using the formula
+                                String formattedDistance = String.format("%.3f", distance); // Round to three significant digits
                                 databaseReferenceForUserB = FirebaseDatabase.getInstance("https://login-register-ce281-default-rtdb.asia-southeast1.firebasedatabase.app/")
                                         .getReference("Monitor").child(userBUid);
 
@@ -255,6 +263,7 @@ public class MonitoringActivity extends AppCompatActivity {
                                 beaconInfo.put("name", beaconName);
                                 beaconInfo.put("address", beaconAddress);
                                 beaconInfo.put("rssi", rssi);
+                                beaconInfo.put("distance", formattedDistance + " cm");
                                 databaseReferenceForUserB.setValue(beaconInfo);
 
                             }

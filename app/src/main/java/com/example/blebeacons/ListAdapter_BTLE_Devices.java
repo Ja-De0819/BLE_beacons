@@ -29,20 +29,17 @@ public class ListAdapter_BTLE_Devices extends ArrayAdapter<BTLE_Device> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-
         if (convertView == null) {
             LayoutInflater inflater =
                     (LayoutInflater) activity.getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(layoutResourceID, parent, false);
         }
-
         BTLE_Device device = devices.get(position);
         String name = device.getName();
         String address = device.getAddress();
         int rssi = device.getRSSI();
 
         TextView tv_name = null;
-
         tv_name = (TextView) convertView.findViewById(R.id.tv_name);
         if (name != null && name.length() > 0) {
             tv_name.setText(device.getName());
@@ -61,7 +58,6 @@ public class ListAdapter_BTLE_Devices extends ArrayAdapter<BTLE_Device> {
         else {
             tv_macaddr.setText("No Address");
         }
-
         return convertView;
     }
 }
